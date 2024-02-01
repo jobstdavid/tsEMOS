@@ -1,0 +1,11 @@
+bibentry(bibtype = "Article",
+         title = "Time Series based Ensemble Model Output Statistics for Temperature Forecasts Postprocessing",
+         author = c(person(given = "David", family = "Jobst", email = "jobst@imai.uni-hildesheim.de", comment = c(ORCID = "0000-0002-2014-3530")),
+                    person(given = "Annette", family = "M\"oller", email = "annette.moeller@uni-bielefeld.de", comment = c(ORCID = "0000-0001-9386-1691")),
+		                person(given = "J\"urgen", family = "Gross", email = "gross@imai.uni-hildesheim.de", comment = c(ORCID = "0000-0002-3861-4708"))),
+         year = "2024",
+         publisher = "arXiv",
+         doi = "",
+         journal = "arXiv",
+         header = "To cite tsEMOS in publications use:"
+)
