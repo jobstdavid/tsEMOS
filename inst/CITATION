@@ -5,7 +5,7 @@ bibentry(bibtype = "Article",
 		                person(given = "J\"urgen", family = "Gross", email = "gross@imai.uni-hildesheim.de", comment = c(ORCID = "0000-0002-3861-4708"))),
          year = "2024",
          publisher = "arXiv",
-         doi = "",
+         doi = "https://doi.org/10.48550/arXiv.2402.00555",
          journal = "arXiv",
          header = "To cite tsEMOS in publications use:"
 )

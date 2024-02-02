@@ -133,3 +133,4 @@ questions or suggestions.
 
 Jobst, D., Möller, A., and Groß, J. (2023). Time Series based Ensemble
 Model Output Statistics for Temperature Forecasts Postprocessing.
+<https://doi.org/10.48550/arXiv.2402.00555>.

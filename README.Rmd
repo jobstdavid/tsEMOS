@@ -128,4 +128,4 @@ fit <- sar_semos(train = train,
 Feel free to contact [jobstd@uni-hildesheim.de](mailto:jobstd@uni-hildesheim.de) if you have any questions or suggestions.
 
 ## References
-Jobst, D., Möller, A., and Groß, J. (2023). Time Series based Ensemble Model Output Statistics for Temperature Forecasts Postprocessing.
+Jobst, D., Möller, A., and Groß, J. (2023). Time Series based Ensemble Model Output Statistics for Temperature Forecasts Postprocessing. https://doi.org/10.48550/arXiv.2402.00555.
