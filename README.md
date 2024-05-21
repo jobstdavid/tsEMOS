@@ -73,7 +73,8 @@ fit <- semos(train = train,
              doy_col = 3,
              obs_col = 9,
              mean_col = 10,
-             sd_col = 11)
+             sd_col = 11,
+             n_ahead = 0)
 ```
 
 ### DAR-SEMOS
@@ -131,6 +132,6 @@ questions or suggestions.
 
 ## References
 
-Jobst, D., Möller, A., and Groß, J. (2023). Time Series based Ensemble
+Jobst, D., Möller, A., and Groß, J. (2024). Time Series based Ensemble
 Model Output Statistics for Temperature Forecasts Postprocessing.
 <https://doi.org/10.48550/arXiv.2402.00555>.

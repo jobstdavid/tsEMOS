@@ -8,6 +8,9 @@
 #' @param obs_col column of the observation variable.
 #' @param mean_col column of the ensemble mean forecast variable.
 #' @param sd_col column of the ensemble standard deviation variable.
+#' @param n_ahead integer corresponding to the forecast ahead time
+#' (0 for ahead times not greater than 24 hours,
+#' 1 for ahead times greater than 24 hours and not greater than 48 hours, and so on).
 #' @param ... unused
 #'
 #' @return A data frame containing the distribution (location and scale) parameters.
@@ -33,7 +36,8 @@
 #'              doy_col = 3,
 #'              obs_col = 9,
 #'              mean_col = 10,
-#'              sd_col = 11)
+#'              sd_col = 11,
+#'              n_ahead = 0)
 #'
 #' # distribution parameters
 #' head(fit)
@@ -51,7 +55,8 @@
 #'              doy_col = 3,
 #'              obs_col = 9,
 #'              mean_col = 10,
-#'              sd_col = 11)
+#'              sd_col = 11,
+#'              n_ahead = 1)
 #'
 #' # distribution parameters
 #' head(fit)
@@ -65,12 +70,14 @@ semos <- function(train,
                   obs_col,
                   mean_col,
                   sd_col,
+                  n_ahead = 0,
                   ...) {
 
   # get necessary training data
   n <- nrow(train)
   doy <- train[, doy_col]
-  obs <- train[, obs_col]
+  # replace values which can not be used for n_ahead by NA
+  obs <- c(train[1:(n-n_ahead), obs_col], rep(NA, n_ahead))
   # impute missing values due to leadtime to be able to calculate approximate residuals
   obs <- na_ma(obs)
   m <- train[, mean_col]

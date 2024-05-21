@@ -172,7 +172,7 @@ dargarchadd_semos <- function(train,
   omega0 <- as.numeric(coef(fit_garch)[1])
   omega1 <- as.numeric(coef(fit_garch)[3])
   omega2 <- as.numeric(coef(fit_garch)[2])
-  coef_garch <- c(omega0, omega1, omega2)
+  coef_garch <- sqrt(c(omega0, omega1, omega2))
 
   # prediction function for the AR(p)-process with n_ahead forecast step
   predict_r <- function(r, mu, a, p, n_ahead) {
@@ -212,21 +212,22 @@ dargarchadd_semos <- function(train,
       r_c <- predict_r(r = r, mu = pars[21], a = pars[22:(21+p)], p = p, n_ahead = 0)
       n <- length(r_c)
       z <- tail(r, n = n) - r_c
+      SIGMA <- tail(SIGMA, n-1)
 
-      # initial values
+      # initial value for sig_c
       sig_c <- sqrt(mean(z^2))
-      sig_s <- tail(SIGMA, n = n)
-
+      # predict z-value for correction
       for (k in 1:(n-1)) {
-        sig_c <- c(sig_c, sqrt(sig_s[k+1]^2 + pars[22+p]^2 + pars[23+p]^2 * sig_c[k]^2 + pars[24+p]^2 * z[k]^2))
+        sig_c <- c(sig_c, sqrt(SIGMA[k]^2 + pars[22+p]^2 + pars[23+p]^2 * sig_c[k]^2 + pars[24+p]^2 * z[k]^2))
       }
+      sig_c <- sig_c[-1]
 
       # adapt length of parameters based on lag p
-      OBS <- obs[-c(1:p)]
-      MU <- MU[-c(1:p)]
+      OBS <- obs[-c(1:(p+1))]
+      MU <- MU[-c(1:(p+1))]
 
       # correct MU and SIGMA
-      MU <- r_c + MU
+      MU <- r_c[-1] + MU
       SIGMA <- sig_c
       # calculate CRPS
       z <- (OBS - MU)/SIGMA
@@ -262,21 +263,12 @@ dargarchadd_semos <- function(train,
 
     # predict z-value for correction
     sig_c <- sqrt(mean(z^2))
-    sig_s <- tail(SIGMA, n = n_r_c)
-
-    for (k in 1:(n_r_c-1)) {
-      sig_c <- c(sig_c, sqrt(sig_s[k+1]^2 + pars[22+p]^2 + pars[23+p]^2 * sig_c[k]^2 + pars[24+p]^2 * z[k]^2))
-    }
-
-    # initial sig_c and z
-    sig_c <- tail(sig_c, n = 1)
-    z <- tail(z, n = 1)
 
     # get necessary test data
-    doy <- c(doy[(n-p+1-n_ahead):n], test[, doy_col])
-    obs <- c(obs[(n-p+1-n_ahead):n], test[, obs_col])
-    m <- c(m[(n-p+1-n_ahead):n], test[, mean_col])
-    s <- c(s[(n-p+1-n_ahead):n], test[, sd_col])
+    doy <- c(doy[(n-(2*n_ahead+p)):n], test[, doy_col])
+    obs <- c(obs[(n-(2*n_ahead+p)):n], test[, obs_col])
+    m <- c(m[(n-(2*n_ahead+p)):n], test[, mean_col])
+    s <- c(s[(n-(2*n_ahead+p)):n], test[, sd_col])
 
     sin1 <- sin(2*pi*doy/365.25)
     sin2 <- sin(4*pi*doy/365.25)
@@ -284,28 +276,24 @@ dargarchadd_semos <- function(train,
     cos2 <- cos(4*pi*doy/365.25)
     doys <- cbind(1, sin1, sin2, cos1, cos2)
 
-    # get updated initial values for sig_c and z for the last iteration in the optimization
-    MU <- doys %*% pars[1:5] + doys %*% pars[6:10]*m
+    MU <- as.vector(doys %*% pars[1:5] + doys %*% pars[6:10]*m)
     SIGMA <- as.vector(exp(doys %*% pars[11:15] + doys %*% pars[16:20]*s))
     r <- as.vector((obs-MU))
-
     # predict r-values for correction
     r_c <- predict_r(r = r, mu = pars[21], a = pars[22:(21+p)], p = p, n_ahead = n_ahead)
     n_r_c <- length(r_c)
-    z <- c(z, # initial z value from above
-           tail(r, n = n_r_c) - r_c)
+    z <- as.vector((tail(r, n = n_r_c) - r_c))
+    n2 <- nrow(test)
+    SIGMA <- tail(SIGMA, n2)
 
-    # predict z-value for correction
-    sig_s <- tail(SIGMA, n = n_r_c)
-
-    for (k in 1:n_r_c) {
-      sig_c <- c(sig_c, sqrt(sig_s[k]^2 + pars[22+p]^2 + pars[23+p]^2 * sig_c[k]^2 + pars[24+p]^2 * z[k]^2))
+    # predict sig_c
+    for (k in 1:n2) {
+      sig_c <- c(sig_c, sqrt(SIGMA[k]^2 + pars[22+p]^2 + pars[23+p]^2 * sig_c[k]^2 + pars[24+p]^2 * z[k]^2))
     }
-    sig_c <- sig_c[-1]
 
     # predicted/correct parameters
-    MU <- r_c + MU[-c(1:(p+n_ahead))]
-    SIGMA <- sig_c
+    MU <- tail(MU, n2) + tail(r_c, n2)
+    SIGMA <- tail(sig_c, n2)
 
   } else {
 

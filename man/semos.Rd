@@ -4,7 +4,7 @@
 \alias{semos}
 \title{Smooth EMOS (SEMOS)}
 \usage{
-semos(train, test, doy_col, obs_col, mean_col, sd_col, ...)
+semos(train, test, doy_col, obs_col, mean_col, sd_col, n_ahead = 0, ...)
 }
 \arguments{
 \item{train}{data frame containing the training data.}
@@ -18,6 +18,10 @@ semos(train, test, doy_col, obs_col, mean_col, sd_col, ...)
 \item{mean_col}{column of the ensemble mean forecast variable.}
 
 \item{sd_col}{column of the ensemble standard deviation variable.}
+
+\item{n_ahead}{integer corresponding to the forecast ahead time
+(0 for ahead times not greater than 24 hours,
+1 for ahead times greater than 24 hours and not greater than 48 hours, and so on).}
 
 \item{...}{unused}
 }
@@ -44,7 +48,8 @@ fit <- semos(train = train,
              doy_col = 3,
              obs_col = 9,
              mean_col = 10,
-             sd_col = 11)
+             sd_col = 11,
+             n_ahead = 0)
 
 # distribution parameters
 head(fit)
@@ -62,7 +67,8 @@ fit <- semos(train = train,
              doy_col = 3,
              obs_col = 9,
              mean_col = 10,
-             sd_col = 11)
+             sd_col = 11,
+             n_ahead = 1)
 
 # distribution parameters
 head(fit)

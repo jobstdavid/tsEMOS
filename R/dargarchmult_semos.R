@@ -170,7 +170,7 @@ dargarchmult_semos <- function(train,
   omega0 <- as.numeric(coef(fit_garch)[1])
   omega1 <- as.numeric(coef(fit_garch)[3])
   omega2 <- as.numeric(coef(fit_garch)[2])
-  coef_garch <- c(omega0, omega1, omega2)
+  coef_garch <- sqrt(c(omega0, omega1, omega2))
 
   # prediction function for the AR(p)-process with n_ahead forecast step
   predict_r <- function(r, mu, a, p, n_ahead) {
@@ -202,7 +202,7 @@ dargarchmult_semos <- function(train,
 
     optim_fun1 <- function(pars, obs, m, s, doys, p) {
 
-      MU <- doys %*% pars[1:5] + doys %*% pars[6:10]*m
+      MU <- as.vector(doys %*% pars[1:5] + doys %*% pars[6:10]*m)
       SIGMA <- as.vector(exp(doys %*% pars[11:15] + doys %*% pars[16:20]*s))
       r <- as.vector((obs-MU))
 
@@ -211,19 +211,21 @@ dargarchmult_semos <- function(train,
       n <- length(r_c)
       z <- (tail(r, n = n) - r_c)/tail(SIGMA, n = n)
 
-      # predict z-value for correction
+      # initial value for sig_c
       sig_c <- sqrt(mean(z^2))
+      # predict z-value for correction
       for (k in 1:(n-1)) {
         sig_c <- c(sig_c, sqrt(pars[22+p]^2 + pars[23+p]^2 * sig_c[k]^2 + pars[24+p]^2 * z[k]^2))
       }
+      sig_c <- sig_c[-1]
 
       # adapt length of parameters based on lag p
-      OBS <- obs[-c(1:p)]
-      MU <- MU[-c(1:p)]
-      SIGMA <- SIGMA[-c(1:p)]
+      OBS <- obs[-c(1:(p+1))]
+      MU <- MU[-c(1:(p+1))]
+      SIGMA <- SIGMA[-c(1:(p+1))]
 
       # correct MU and SIGMA
-      MU <- r_c + MU
+      MU <- r_c[-1] + MU
       SIGMA <- sig_c * SIGMA
       # calculate CRPS
       z <- (OBS - MU)/SIGMA
@@ -248,29 +250,22 @@ dargarchmult_semos <- function(train,
     pars <- res$par
 
     # get initial values for sig_c and z from the last iteration in the above optimization
-    MU <- doys %*% pars[1:5] + doys %*% pars[6:10]*m
-    SIGMA <- exp(doys %*% pars[11:15] + doys %*% pars[16:20]*s)
+    MU <- as.vector(doys %*% pars[1:5] + doys %*% pars[6:10]*m)
+    SIGMA <- as.vector(exp(doys %*% pars[11:15] + doys %*% pars[16:20]*s))
     r <- as.vector((obs-MU))
 
     r_c <- predict_r(r = r, mu = pars[21], a = pars[22:(21+p)], p = p, n_ahead = 0)
     n_r_c <- length(r_c)
     z <- (tail(r, n = n_r_c) - r_c)/tail(SIGMA, n = n_r_c)
 
+    # initial value for sig_c
     sig_c <- sqrt(mean(z^2))
-    # predict sig_c
-    for (k in 1:(n_r_c-1)) {
-      sig_c <- c(sig_c, sqrt(pars[22+p]^2 + pars[23+p]^2 * sig_c[k]^2 + pars[24+p]^2 * z[k]^2))
-    }
-
-    # initial sig_c and z
-    sig_c <- tail(sig_c, n = 1)
-    z <- tail(z, n = 1)
 
     # get necessary test data
-    doy <- c(doy[(n-p+1-n_ahead):n], test[, doy_col])
-    obs <- c(obs[(n-p+1-n_ahead):n], test[, obs_col])
-    m <- c(m[(n-p+1-n_ahead):n], test[, mean_col])
-    s <- c(s[(n-p+1-n_ahead):n], test[, sd_col])
+    doy <- c(doy[(n-(2*n_ahead+p)):n], test[, doy_col])
+    obs <- c(obs[(n-(2*n_ahead+p)):n], test[, obs_col])
+    m <- c(m[(n-(2*n_ahead+p)):n], test[, mean_col])
+    s <- c(s[(n-(2*n_ahead+p)):n], test[, sd_col])
 
     sin1 <- sin(2*pi*doy/365.25)
     sin2 <- sin(4*pi*doy/365.25)
@@ -279,25 +274,24 @@ dargarchmult_semos <- function(train,
     doys <- cbind(1, sin1, sin2, cos1, cos2)
 
 
-    MU <- doys %*% pars[1:5] + doys %*% pars[6:10]*m
-    SIGMA <- exp(doys %*% pars[11:15] + doys %*% pars[16:20]*s)
+    MU <- as.vector(doys %*% pars[1:5] + doys %*% pars[6:10]*m)
+    SIGMA <- as.vector(exp(doys %*% pars[11:15] + doys %*% pars[16:20]*s))
     r <- as.vector((obs-MU))
     # predict r-values for correction
     r_c <- predict_r(r = r, mu = pars[21], a = pars[22:(21+p)], p = p, n_ahead = n_ahead)
     n_r_c <- length(r_c)
-    z <- c(z, # initial z from above
-           (tail(r, n = n_r_c) - r_c)/tail(SIGMA, n = n_r_c))
+    z <- as.vector((tail(r, n = n_r_c) - r_c)/tail(SIGMA, n = n_r_c))
+    n2 <- nrow(test)
 
     # predict sig_c
-    for (k in 1:n_r_c) {
+    for (k in 1:n2) {
       sig_c <- c(sig_c, sqrt(pars[22+p]^2 + pars[23+p]^2 * sig_c[k]^2 + pars[24+p]^2 * z[k]^2))
     }
-    # remove initial sig_c
-    sig_c <- sig_c[-1]
 
     # predicted/correct parameters
-    MU <- r_c + MU[-c(1:(p+n_ahead))]
-    SIGMA <- sig_c * SIGMA[-c(1:(p+n_ahead))]
+    MU <- tail(r_c, n2) + tail(MU, n2)
+    SIGMA <- tail(sig_c, n2)*tail(SIGMA, n2)
+
 
   } else {
 
