@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/tsEMOS)](https://CRAN.R-project.org/package=tsEMOS)
 [![R-CMD-check](https://github.com/jobstdavid/tsEMOS/workflows/R-CMD-check/badge.svg)](https://github.com/jobstdavid/tsEMOS/actions)
-[![version](https://img.shields.io/badge/version-0.1.0-green.svg?style=flat)](https://github.com/jobstdavid/tsEMOS)
+[![version](https://img.shields.io/badge/version-0.2.0-green.svg?style=flat)](https://github.com/jobstdavid/tsEMOS)
 <!-- badges: end -->
 
 An R package for time series based extensions of Ensemble Model Output Statistics (EMOS) as described in the references.  
